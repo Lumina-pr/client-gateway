@@ -10,6 +10,13 @@ async function bootstrap() {
 
   app.useGlobalFilters(new RpcCustomExceptionFilter());
 
+  app.enableCors({
+    // Allow all origins
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
+
   const config = new DocumentBuilder()
     .setTitle('Lumina Client Gateway')
     .setVersion('1.0')
