@@ -8,7 +8,7 @@ export const Token = createParamDecorator(
   (data: unknown, ctx: ExecutionContext) => {
     const request = ctx.switchToHttp().getRequest();
 
-    if (!request.token) {
+    if (!request.cookies?.authToken) {
       throw new InternalServerErrorException(
         'Token not found in request (AuthGuard called?)',
       );

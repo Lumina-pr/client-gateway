@@ -8,14 +8,12 @@ import {
   Delete,
   Inject,
   UseGuards,
-  HttpException,
-  HttpStatus,
 } from '@nestjs/common';
 import { CreateDeviceDto } from './dto/create-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
 import { NATS_SERVICE } from 'src/config/sercices';
 import { ClientProxy } from '@nestjs/microservices';
-import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { User } from 'src/auth/decorators/user.decorator';
 
@@ -53,9 +51,14 @@ export class DevicesController {
   @Patch(':id')
   @UseGuards(AuthGuard)
   @ApiBearerAuth('JWT-auth')
-  update(@Param('id') id: string, @Body() updateDeviceDto: UpdateDeviceDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateDeviceDto: UpdateDeviceDto,
+    @User() userId: string,
+  ) {
     return this.client.send('devices.update.device', {
       id,
+      userId,
       ...updateDeviceDto,
     });
   }
@@ -63,15 +66,10 @@ export class DevicesController {
   @Delete(':id')
   @UseGuards(AuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({
-    summary: 'Delete a device',
-    description: 'This endpoint is not implemented yet',
-  })
-  @ApiResponse({
-    status: 501,
-    description: 'Not Implemented',
-  })
-  remove() {
-    throw new HttpException('Not Implemented', HttpStatus.NOT_IMPLEMENTED);
+  remove(@Param('id') id: string, @User() userId: string) {
+    return this.client.send('devices.remove.device', {
+      id,
+      userId,
+    });
   }
 }
