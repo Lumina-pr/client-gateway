@@ -4,14 +4,41 @@ import { envs } from './config/envs';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { RpcCustomExceptionFilter } from './common/exceptions/rpc-custom-exception.filter';
 import { ValidationPipe } from '@nestjs/common';
-import * as cookieParser from 'cookie-parser';
+import * as session from 'express-session';
+import * as passport from 'passport';
+import * as redis from 'redis';
+import { RedisStore } from 'connect-redis';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalFilters(new RpcCustomExceptionFilter());
 
-  app.use(cookieParser());
+  const redisClient = redis.createClient({
+    socket: {
+      host: envs.redis.host,
+      port: envs.redis.port,
+    },
+  });
+
+  await redisClient.connect();
+
+  app.use(
+    session({
+      store: new RedisStore({
+        client: redisClient,
+      }),
+      secret: envs.sessions.secret,
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: false,
+      },
+    }),
+  );
+
+  app.use(passport.initialize());
+  app.use(passport.session());
 
   app.enableCors({
     origin: true, // Allows connections from any origin
